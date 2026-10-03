@@ -1,6 +1,6 @@
 # Arbuda Times
 
-A mobile-first wholesale watch catalogue for retailers, built with Next.js, TypeScript and Tailwind CSS. It includes product search and filters, MOQ-aware quantities, a persistent multi-product enquiry cart, WhatsApp message generation, owner-only administration, D1 product storage and R2 image storage.
+A mobile-first kids’ watch store built with Next.js, TypeScript and Tailwind CSS. It includes age-based product filters, a persistent shopping cart, WhatsApp ordering, owner-only administration, D1 product storage and R2 image storage.
 
 ## Local setup
 
@@ -21,7 +21,7 @@ Open `/admin` and sign in with the Site owner's ChatGPT account. This is the sec
 
 ## WhatsApp and business details
 
-Before production use, replace the placeholder `WA` number in `components/storefront.tsx` with the business number in international format (digits only), and update the visible phone, address, hours and Instagram placeholders. A map is intentionally omitted until a real address is supplied.
+The storefront uses `+91 96629 65289` for WhatsApp and phone calls, and links to `@arbuda_times__surat` on Instagram. Add the store address and opening hours before launch; a map is intentionally omitted until a real address is supplied.
 
 ## Verification and deployment
 

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "Arbuda Times | Wholesale Watches", template: "%s | Arbuda Times" },
-  description: "Browse the latest wholesale watch collection for retailers. View MOQ, pricing and send a multi-product enquiry on WhatsApp.",
+  title: { default: "Arbuda Times | Fun Watches for Kids", template: "%s | Arbuda Times" },
+  description: "Discover colorful, comfortable watches made just for kids. Shop fun styles for school, playtime, birthdays and gifting.",
   other: {
     "codex-preview": "development",
   },
