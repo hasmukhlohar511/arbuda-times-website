@@ -1,0 +1,5 @@
+import { NextRequest, NextResponse } from "next/server";
+import { env } from "cloudflare:workers";
+import { getChatGPTUser } from "@/app/chatgpt-auth";
+const allowed=new Set(["image/jpeg","image/png","image/webp"]);
+export async function POST(req:NextRequest){if(!await getChatGPTUser())return NextResponse.json({error:"Unauthorized"},{status:401});const data=await req.formData(),file=data.get("file");if(!(file instanceof File))return NextResponse.json({error:"Choose an image."},{status:400});if(!allowed.has(file.type))return NextResponse.json({error:"Use JPG, PNG or WebP."},{status:400});if(file.size>5*1024*1024)return NextResponse.json({error:"Image must be under 5 MB."},{status:400});if(!env.BUCKET)return NextResponse.json({error:"Image storage is not configured."},{status:503});const ext=file.type.split("/")[1].replace("jpeg","jpg"),key=`products/${crypto.randomUUID()}.${ext}`;await env.BUCKET.put(key,await file.arrayBuffer(),{httpMetadata:{contentType:file.type,cacheControl:"public, max-age=31536000, immutable"}});return NextResponse.json({url:`/api/images/${key}`})}
