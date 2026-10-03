@@ -18,7 +18,7 @@ export default function Storefront({initialProducts}:{initialProducts:Product[]}
  const [cart,setCart]=useState<CartItem[]>([]),[ready,setReady]=useState(false),[menu,setMenu]=useState(false),[products,setProducts]=useState(initialProducts);
  const path=usePathname();
  // eslint-disable-next-line react-hooks/set-state-in-effect
- useEffect(()=>{try{const saved=JSON.parse(localStorage.getItem("arbuda-cart")||"[]") as CartItem[];setCart(saved.filter(x=>kidsCategories.includes(x.product.category)))}catch{} setReady(true);fetch("/api/products").then(r=>r.ok?r.json():null).then(d=>{if(d?.length)setProducts(d)}).catch(()=>{})},[]);
+ useEffect(()=>{try{const saved=JSON.parse(localStorage.getItem("arbuda-cart")||"[]") as CartItem[];setCart(saved.filter(x=>kidsCategories.includes(x.product.category)))}catch{} setReady(true);fetch("/api/products").then(async r=>r.ok?await r.json() as Product[]:null).then(d=>{if(d?.length)setProducts(d)}).catch(()=>{})},[]);
  useEffect(()=>{if(ready)localStorage.setItem("arbuda-cart",JSON.stringify(cart))},[cart,ready]);
  const add=(product:Product,variant=product.variants[0],quantity=1)=>{setCart(c=>{const i=c.findIndex(x=>x.product.id===product.id&&x.variant===variant);if(i<0)return[...c,{product,variant,quantity}];return c.map((x,n)=>n===i?{...x,quantity:x.quantity+quantity}:x)});};
  const productId=path.match(/^\/product\/([^/]+)/)?.[1];
