@@ -1,0 +1,23 @@
+import { createHash, randomBytes } from "node:crypto";
+import argon2 from "argon2";
+import { Router } from "express";
+import { z } from "zod";
+import { env } from "../config/env.js";
+import { asyncHandler } from "../lib/async-handler.js";
+import { AppError } from "../lib/errors.js";
+import { validateBody } from "../lib/validation.js";
+import { requireUser } from "../middleware/auth.js";
+import { Session, User } from "../models/platform.js";
+const loginSchema = z.object({ email: z.email().transform((v) => v.toLowerCase()), password: z.string().min(8).max(200) });
+const tokenHash = (token: string) => createHash("sha256").update(token).digest("hex");
+export const authRouter = Router();
+authRouter.post("/login", validateBody(loginSchema), asyncHandler(async (req, res) => {
+  const user = await User.findOne({ email: req.body.email, active: true });
+  if (!user || !await argon2.verify(String(user.passwordHash), req.body.password)) throw new AppError(401, "Invalid email or password", "INVALID_CREDENTIALS");
+  const token = randomBytes(32).toString("base64url"); const expiresAt = new Date(Date.now() + env.SESSION_TTL_HOURS * 3_600_000);
+  await Session.create({ userId: user._id, tokenHash: tokenHash(token), expiresAt, lastUsedAt: new Date() });
+  res.cookie(env.SESSION_COOKIE_NAME, token, { httpOnly: true, secure: env.isProduction, sameSite: "lax", expires: expiresAt, path: "/" });
+  res.json({ user: { id: user.id, name: user.name, email: user.email } });
+}));
+authRouter.post("/logout", asyncHandler(async (req, res) => { const token = req.cookies?.[env.SESSION_COOKIE_NAME] as string | undefined; if (token) await Session.deleteOne({ tokenHash: tokenHash(token) }); res.clearCookie(env.SESSION_COOKIE_NAME, { httpOnly: true, secure: env.isProduction, sameSite: "lax", path: "/" }); res.status(204).send(); }));
+authRouter.get("/me", requireUser, (req, res) => res.json({ user: req.authUser }));

@@ -1,23 +1,36 @@
 # Arbuda Times
 
-A mobile-first kids’ watch store built with Next.js, TypeScript and Tailwind CSS. It includes age-based product filters, a persistent shopping cart, WhatsApp ordering, owner-only administration, D1 product storage and R2 image storage.
+A mobile-first kids’ watch store built with Next.js, TypeScript and Tailwind CSS. It includes age-based product filters, a persistent shopping cart, WhatsApp ordering, and owner-only administration backed by the standalone Express/MongoDB service in `backend/`.
 
 ## Local setup
 
 1. Use Node.js 22.13 or newer.
 2. Install dependencies with `npm run install:ci`.
-3. Generate the D1 migration with `npm run db:generate` (a migration is already included).
-4. Start development with `npm run dev`.
+3. Follow `backend/README.md` to bootstrap and start the API on port 4000.
+4. Set `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_SITE_SLUG` in `.env.local`.
+5. Start the frontend with `npm run dev`.
 
 The public catalogue falls back to clearly marked demo products until D1 contains published products. Replace `public/demo-watch-collection.png` and the placeholder contact details before launch.
 
-## Database and images
+## Local admin credentials
 
-`.openai/hosting.json` declares the D1 binding `DB` and R2 binding `BUCKET`. Sites creates and binds these services during deployment and applies the checked-in `drizzle/` migrations. Product records, publication state and settings are stored in D1. Uploaded JPG, PNG and WebP files (maximum 5 MB) are validated server-side and stored in R2.
+Use these credentials only for the local development environment:
+
+```text
+Admin URL: http://127.0.0.1:5173/admin
+Email: owner@arbuda.local
+Password: ArbudaDev2026!
+```
+
+These credentials must not be used in staging or production. Create a unique production owner password through the backend bootstrap configuration and keep it outside Git.
+
+## Backend, database and images
+
+The standalone `backend/` project uses Express, Mongoose and MongoDB. Platform users and website memberships live in the platform database, while Arbuda Times products live in a dedicated tenant database. Other websites receive different databases, so products cannot cross website boundaries. Uploaded JPG, PNG and WebP files are validated and stored under a tenant-specific media directory.
 
 ## First admin and security
 
-Open `/admin` and sign in with the Site owner's ChatGPT account. This is the secure first-admin bootstrap: there is no public registration page and no hardcoded password. Admin pages, product mutations, permanent deletion and upload endpoints verify the authenticated user server-side. Invite additional Site editors through the Site access controls if another administrator is needed.
+Run the backend bootstrap command to create the first owner, then open `/admin` and sign in with that account. There is no public registration. Passwords use Argon2id and browser sessions use opaque, hashed, HTTP-only cookie tokens. Product mutations, deletion and upload endpoints verify both the session and website membership server-side.
 
 ## WhatsApp and business details
 
@@ -28,7 +41,7 @@ The storefront uses `+91 96629 65289` for WhatsApp and phone calls, and links to
 - `npm run lint`
 - `npm run build`
 
-The project is configured for OpenAI Sites/Cloudflare Workers. Secrets must be configured as Site environment variables and must never be committed. No payment gateway is included.
+Both applications can run independently behind Nginx or through the included backend Docker configuration. Secrets must be configured as environment variables and must never be committed. No payment gateway is included.
 
 ## Generated demo asset
 

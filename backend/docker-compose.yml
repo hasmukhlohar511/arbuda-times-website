@@ -1,0 +1,33 @@
+services:
+  mongodb:
+    image: mongo:8
+    restart: unless-stopped
+    volumes: [mongodb_data:/data/db]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      mongodb: { condition: service_healthy }
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      MONGODB_URI: mongodb://mongodb:27017
+      PLATFORM_DATABASE: arbuda_platform
+      SESSION_COOKIE_NAME: arbuda_session
+      SESSION_TTL_HOURS: 12
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      TRUST_PROXY: 1
+      API_PUBLIC_URL: ${API_PUBLIC_URL:-http://127.0.0.1:4000}
+      MEDIA_ROOT: /app/data/media
+      CUSTOMER_SESSION_COOKIE_NAME: arbuda_customer_session
+      CUSTOMER_SESSION_TTL_DAYS: 30
+    ports: ["127.0.0.1:4000:4000"]
+    volumes: [media_data:/app/data/media]
+volumes:
+  mongodb_data:
+  media_data:

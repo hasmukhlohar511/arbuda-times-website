@@ -1,3 +1,2 @@
-import { requireChatGPTUser } from "@/app/chatgpt-auth";
-import AdminDashboard from "@/components/admin-dashboard";
-export default async function AdminPage(){const user=await requireChatGPTUser("/admin");return <AdminDashboard user={user.displayName}/>}
+import AdminPageClient from "@/components/admin-page-client";
+export default function AdminPage(){return <AdminPageClient/>}
