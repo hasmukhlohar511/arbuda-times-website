@@ -15,6 +15,7 @@ const password = z.string().min(8, "Password must be at least 8 characters").max
 const registerSchema = z.object({ name: z.string().trim().min(2).max(100), email, password });
 const loginSchema = z.object({ email, password });
 const sessionHash = (token:string) => createHash("sha256").update(token).digest("hex");
+const cookieSecurity = { secure: env.isProduction, sameSite: env.isProduction ? "none" as const : "lax" as const };
 export const customerAuthRouter = Router({ mergeParams:true });
 
 async function tenantModels(siteSlug:string){
@@ -25,7 +26,7 @@ async function tenantModels(siteSlug:string){
 async function createSession(CustomerSession:ReturnType<typeof getCustomerModels>["CustomerSession"],customerId:unknown,res:Parameters<Parameters<typeof asyncHandler>[0]>[1]){
   const token=randomBytes(32).toString("base64url"),expiresAt=new Date(Date.now()+env.CUSTOMER_SESSION_TTL_DAYS*86_400_000);
   await CustomerSession.create({customerId,tokenHash:sessionHash(token),expiresAt,lastUsedAt:new Date()});
-  res.cookie(env.CUSTOMER_SESSION_COOKIE_NAME,token,{httpOnly:true,secure:env.isProduction,sameSite:"lax",expires:expiresAt,path:"/"});
+  res.cookie(env.CUSTOMER_SESSION_COOKIE_NAME,token,{httpOnly:true,...cookieSecurity,expires:expiresAt,path:"/"});
 }
 
 customerAuthRouter.post("/register",validateBody(registerSchema),asyncHandler(async(req,res)=>{
@@ -55,5 +56,5 @@ customerAuthRouter.get("/me",asyncHandler(async(req,res)=>{
 customerAuthRouter.post("/logout",asyncHandler(async(req,res)=>{
   const {CustomerSession}=await tenantModels(String(req.params.siteSlug));
   const token=req.cookies?.[env.CUSTOMER_SESSION_COOKIE_NAME] as string|undefined;if(token)await CustomerSession.deleteOne({tokenHash:sessionHash(token)});
-  res.clearCookie(env.CUSTOMER_SESSION_COOKIE_NAME,{httpOnly:true,secure:env.isProduction,sameSite:"lax",path:"/"});res.status(204).send();
+  res.clearCookie(env.CUSTOMER_SESSION_COOKIE_NAME,{httpOnly:true,...cookieSecurity,path:"/"});res.status(204).send();
 }));
